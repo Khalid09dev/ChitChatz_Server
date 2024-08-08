@@ -1,6 +1,13 @@
-const express = require('express');
-const {createServer} = require('node:http');
+import express from 'express';
+import { createServer } from 'node:http';
+import dotenv from 'dotenv';
 
+import authRoutes from './routes/auth.routes.js';
+
+const port = process.env.PORT || 3000;
+dotenv.config();
+
+// Express setup goes here
 const app = express();
 const server = createServer(app);
 
@@ -8,6 +15,7 @@ app.get('/', (req, res) => {
     res.send('Hello, World!');
 })
 
-server.listen(3000, () => {
-    console.log('server is running on port 3000...');
+app.use('/api/auth', authRoutes);
+server.listen(port, () => {
+    console.log(`server is running on port ${port}`);
 })
