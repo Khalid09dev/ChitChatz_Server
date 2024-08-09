@@ -12,11 +12,14 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
-app.get('/', (req, res) => {
-    res.send('Hello, World!');
-})
+app.use(express.json())
 
 app.use('/api/auth', authRoutes);
+
+// app.get('/', (req, res) => {
+//     res.send('Hello, World!');
+// })
+
 server.listen(port, () => {
     connectToMongoDB();
     console.log(`server is running on port ${port}`);
