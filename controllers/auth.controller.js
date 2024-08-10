@@ -57,8 +57,26 @@ export const signup = async (req, res) => {
     }
 }
 
-export const login = (req, res) => {
-    console.log('loginUser');
+export const login = async (req, res) => {
+    try {
+        const {email, password} = req.body;
+        const user = await User.findOne({email}).exec();
+        const isPasswordCorrect = await bycrypt.compare(password, user?.password || '');
+
+        if(!user || !isPasswordCorrect) {
+            return res.status(400).json({error: 'Invalid credentials'});
+        }
+
+        generateTokenAndSetCookie(user._id, res);
+        res.status(200).json({
+            _id: user._id,
+            email: user.email,
+            profilePic: user.profilePic, 
+        })
+    } catch (error) {
+        console.log('error in login controller:', error);
+        res.status(500).json({error: 'Internal server error'});
+    }
 }
 
 export const logout = (req, res) => {
