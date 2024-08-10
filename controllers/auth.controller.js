@@ -1,4 +1,6 @@
 import User from '../models/user.model.js';
+import bycrypt from 'bcryptjs';
+import generateTokenAndSetCookie from '../utils/generateToken.js';
 
 export const signup = async (req, res) => {
     try {
@@ -8,30 +10,47 @@ export const signup = async (req, res) => {
         
         const user = await User.findOne({email}).exec();
 
-        console.log('user', user);
         if(user) {
             return res.status(400).json({error: 'User already exists'});
         }
 
         //TODO: hash password here
+        const salt = await bycrypt.genSalt(10);
+        const hashedPassword = await bycrypt.hash(password, salt);
 
-
-        const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${email.displayName}`;
-        const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${email.displayName}`;
+        // const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${email.displayName}`;
+        // const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${email.displayName}`;
+        // Determine profile picture based on email domain
+        const emailDomain = email.split('@')[1];
+        let profilePic;
+        
+        if (emailDomain === 'gmail.com') { // Replace 'example.com' with your domain or criteria
+            profilePic = `https://avatar.iran.liara.run/public/boy?username=${email}`;
+        } else {
+            profilePic = `https://avatar.iran.liara.run/public/girl?username=${email}`;
+        }
 
         const newUser = new User({
             email,
-            password,
-            profilePic: boyProfilePic, //TODO: have to add this conditionally
+            password: hashedPassword,
+            profilePic: profilePic, //TODO: have to add this conditionally
         });
 
-        await newUser.save();
+        if(newUser) {
+        //TODO: generate jwt token here
+        generateTokenAndSetCookie(newUser._id, res);
 
+        await newUser.save();
+        
         res.status(201).json({
             _id: newUser._id,
             email: newUser.email,
             profilePic: newUser.profilePic,
         });
+        } else {
+            res.status(400).json({error: 'Invalid user Data' });
+        }
+
     } catch (error) {
         console.log('error in signup controller:', error);
         res.status(500).json({error: 'Internal server error' });
