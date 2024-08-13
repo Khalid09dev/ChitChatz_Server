@@ -15,8 +15,8 @@ This repository contains the backend code for a chat application. It includes an
 
 1. **Clone the Repository**:
     ```bash
-    git clone <repository-url>
-    cd <repository-directory>
+    git clone <https://github.com/Khalid09dev/ChitChatz_Server.git>
+    cd <ChitChatz-Server>
     ```
 
 2. **Install Dependencies**:
