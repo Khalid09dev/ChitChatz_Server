@@ -2,89 +2,98 @@ import User from '../models/user.model.js';
 import bycrypt from 'bcryptjs';
 import generateTokenAndSetCookie from '../utils/generateToken.js';
 
+
 export const signup = async (req, res) => {
     try {
-        const {email, password} = req.body;
+        const { name, email, password } = req.body;
 
-        //TODO: password validation code
-        
-        const user = await User.findOne({email}).exec();
+        console.log(req.body); // Debugging: log request body
 
-        if(user) {
-            return res.status(400).json({error: 'User already exists'});
+        // TODO: Add password validation logic here
+
+        // Check if the user already exists
+        const existingUser = await User.findOne({ email }).exec();
+        if (existingUser) {
+            return res.status(400).json({ error: 'User already exists' });
         }
 
-        //TODO: hash password here
+        // Hash the password
         const salt = await bycrypt.genSalt(10);
         const hashedPassword = await bycrypt.hash(password, salt);
 
-        // const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${email.displayName}`;
-        // const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${email.displayName}`;
         // Determine profile picture based on email domain
         const emailDomain = email.split('@')[1];
-        let profilePic;
-        
-        if (emailDomain === 'gmail.com') { // Replace 'example.com' with your domain or criteria
-            profilePic = `https://avatar.iran.liara.run/public/boy?username=${email}`;
-        } else {
-            profilePic = `https://avatar.iran.liara.run/public/girl?username=${email}`;
-        }
+        const profilePic = emailDomain === 'gmail.com'
+            ? `https://avatar.iran.liara.run/public/boy?username=${email}`
+            : `https://avatar.iran.liara.run/public/girl?username=${email}`;
 
+        // Create a new user
         const newUser = new User({
+            name,
             email,
             password: hashedPassword,
-            profilePic: profilePic, //TODO: have to add this conditionally
+            profilePic
         });
 
-        if(newUser) {
-        //TODO: generate jwt token here
+        // Save the new user and generate a token
+        await newUser.save();
         generateTokenAndSetCookie(newUser._id, res);
 
-        await newUser.save();
-        
+        // Respond with the created user details
         res.status(201).json({
             _id: newUser._id,
+            name: newUser.name,
             email: newUser.email,
             profilePic: newUser.profilePic,
         });
-        } else {
-            res.status(400).json({error: 'Invalid user Data' });
-        }
-
     } catch (error) {
-        console.log('error in signup controller:', error);
-        res.status(500).json({error: 'Internal server error' });
+        // Log and respond with an error message
+        console.error('Error in signup controller:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-}
+};
 
 export const login = async (req, res) => {
     try {
-        const {email, password} = req.body;
-        const user = await User.findOne({email}).exec();
-        const isPasswordCorrect = await bycrypt.compare(password, user?.password || '');
+        // Destructure email and password from request body
+        const { email, password } = req.body;
 
-        if(!user || !isPasswordCorrect) {
-            return res.status(400).json({error: 'Invalid credentials'});
+        // Find the user by email
+        const user = await User.findOne({ email }).exec();
+
+        // Check if the user exists and the password is correct
+        const isPasswordCorrect = user ? await bycrypt.compare(password, user.password) : false;
+
+        if (!user || !isPasswordCorrect) {
+            return res.status(400).json({ error: 'Invalid credentials' });
         }
 
+        // Generate a token and set it in a cookie
         generateTokenAndSetCookie(user._id, res);
+
+        // Respond with user details
         res.status(200).json({
             _id: user._id,
             email: user.email,
-            profilePic: user.profilePic, 
-        })
+            profilePic: user.profilePic,
+        });
     } catch (error) {
-        console.log('error in login controller:', error);
-        res.status(500).json({error: 'Internal server error'});
+        // Log the error and respond with a 500 status
+        console.error('Error in login controller:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-}
+};
 
 export const logout = (req, res) => {
     try {
-        res.cookie('jwt', '', {maxAge: 0})
-        res.status(200).json({message: 'Logged out successfully'});
+        // Clear the JWT cookie by setting its maxAge to 0
+        res.cookie('jwt', '', { maxAge: 0 });
+
+        // Send a successful response
+        res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
-        console.log('error in logout controller:', error);
-        res.status(500).json({error: 'Internal server error'});
+        // Log the error and send a 500 response
+        console.error('Error in logout controller:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-}
+};
