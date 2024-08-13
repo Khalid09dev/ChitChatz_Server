@@ -7,13 +7,14 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import connectToMongoDB from './db/connectToMongoDB.js';
+import { app, server } from './socket/socket.js';
 
 const port = process.env.PORT || 3000;
 dotenv.config();
 
 // Express setup goes here
-const app = express();
-const server = createServer(app);
+// const app = express();
+// const server = createServer(app);
 
 app.use(express.json()); 
 app.use(cookieParser());
