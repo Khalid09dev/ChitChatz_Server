@@ -4,7 +4,7 @@ import privateRoute from '../middlewares/privateRoute.js';
 
 const router = express.Router();
 
-router.get('/:id', privateRoute, getMessages);
+router.get('/:id/:jwt', privateRoute, getMessages);
 router.post('/send/:id', privateRoute, sendMessage);
 
 export default router;

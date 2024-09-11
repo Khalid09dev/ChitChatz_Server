@@ -19,7 +19,7 @@ export const sendMessage = async (req, res) => {
             conversation = await Conversation.create({
                 participants: [senderId, receiverId]
             });
-        }
+        };
 
         // Create a new message
         const newMessage = new Message({
@@ -29,11 +29,12 @@ export const sendMessage = async (req, res) => {
         });
 
         // Add the new message to the conversation
-        conversation.messages.push(newMessage._id);
+        if(newMessage) {
+            conversation.messages.push(newMessage._id);
+        };
 
         // Save both conversation and message
-        await conversation.save();
-        await newMessage.save();
+        await Promise.all([conversation.save(), newMessage.save()]);
 
         // Emit the new message to the receiver via socket.io
         const receiverSocketId = getReceiverSocketId(receiverId);
@@ -46,7 +47,7 @@ export const sendMessage = async (req, res) => {
 
     } catch (error) {
         // Log error and respond with a 500 status
-        console.error('Error in sendMessage controller:', error);
+        console.log('Error in sendMessage controller:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -71,7 +72,7 @@ export const getMessages = async (req, res) => {
         res.status(200).json(conversation.messages);
     } catch (error) {
         // Log the error and respond with a 500 status
-        console.error('Error in getMessages controller:', error);
+        console.log('Error in getMessages controller:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

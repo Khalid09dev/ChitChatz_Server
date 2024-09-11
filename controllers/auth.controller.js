@@ -1,56 +1,49 @@
 import User from '../models/user.model.js';
-import bycrypt from 'bcryptjs';
-import generateTokenAndSetCookie from '../utils/generateToken.js';
-
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export const signup = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
+	try {
+		const { name, email, password} = req.body;
 
-        console.log(req.body); // Debugging: log request body
+		const user = await User.findOne({ email });
 
-        // TODO: Add password validation logic here
+		if (user) {
+			return res.status(400).json({ error: "User already exists" });
+		}
 
-        // Check if the user already exists
-        const existingUser = await User.findOne({ email }).exec();
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
-        }
+		// HASH PASSWORD HERE
+		const salt = await bcrypt.genSalt(10);
+		const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Hash the password
-        const salt = await bycrypt.genSalt(10);
-        const hashedPassword = await bycrypt.hash(password, salt);
+		const newUser = new User({
+			name,
+			email,
+			password: hashedPassword,
+		});
 
-        // Determine profile picture based on email domain
-        const emailDomain = email.split('@')[1];
-        const profilePic = emailDomain === 'gmail.com'
-            ? `https://avatar.iran.liara.run/public/boy?username=${email}`
-            : `https://avatar.iran.liara.run/public/girl?username=${email}`;
+		if (newUser) {
+			// Generate JWT token here
+			// generateTokenAndSetCookie(newUser._id, res);
+            const userId = newUser._id;
+            const token = jwt.sign({userId}, process.env.JWT_SECRET, {
+                expiresIn: "15d",
+            });
+			await newUser.save();
 
-        // Create a new user
-        const newUser = new User({
-            name,
-            email,
-            password: hashedPassword,
-            profilePic
-        });
-
-        // Save the new user and generate a token
-        await newUser.save();
-        generateTokenAndSetCookie(newUser._id, res);
-
-        // Respond with the created user details
-        res.status(201).json({
-            _id: newUser._id,
-            name: newUser.name,
-            email: newUser.email,
-            profilePic: newUser.profilePic,
-        });
-    } catch (error) {
-        // Log and respond with an error message
-        console.error('Error in signup controller:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+			res.status(201).json({
+				_id: newUser._id,
+				name: newUser.name,
+				email: newUser.email,
+                token: token,
+			});
+		} else {
+			res.status(400).json({ error: "Invalid user data" });
+		}
+	} catch (error) {
+		console.log("Error in signup controller", error.message);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
 };
 
 export const login = async (req, res) => {
@@ -62,20 +55,25 @@ export const login = async (req, res) => {
         const user = await User.findOne({ email }).exec();
 
         // Check if the user exists and the password is correct
-        const isPasswordCorrect = user ? await bycrypt.compare(password, user.password) : false;
+        const isPasswordCorrect = user ? await bcrypt.compare(password, user.password) : false;
 
         if (!user || !isPasswordCorrect) {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
         // Generate a token and set it in a cookie
-        generateTokenAndSetCookie(user._id, res);
+        // await generateTokenAndSetCookie(user._id, res);
+        const userId = user._id;
+        const token = jwt.sign({userId}, process.env.JWT_SECRET, {
+            expiresIn: "15d",
+        });
 
         // Respond with user details
         res.status(200).json({
             _id: user._id,
+            name: user.name,
             email: user.email,
-            profilePic: user.profilePic,
+            token: token,
         });
     } catch (error) {
         // Log the error and respond with a 500 status
@@ -86,6 +84,7 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
     try {
+        console.log('I am here for Logging out...');
         // Clear the JWT cookie by setting its maxAge to 0
         res.cookie('jwt', '', { maxAge: 0 });
 
@@ -93,7 +92,7 @@ export const logout = (req, res) => {
         res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
         // Log the error and send a 500 response
-        console.error('Error in logout controller:', error);
+        console.log('Error in logout controller:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

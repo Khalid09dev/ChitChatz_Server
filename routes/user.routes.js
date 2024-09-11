@@ -4,6 +4,6 @@ import { getUsersForSidebar } from '../controllers/user.controller.js';
 
 const router = express.Router();
 
-router.get('/', privateRoute, getUsersForSidebar);
+router.get('/:jwt', privateRoute, getUsersForSidebar);
 
 export default router;
