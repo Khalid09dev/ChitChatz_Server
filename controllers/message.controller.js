@@ -2,13 +2,17 @@ import Conversation from '../models/conversation.model.js';
 import Message from '../models/message.model.js';
 import { getReceiverSocketId, io } from '../socket/socket.js';
 
-
 export const sendMessage = async (req, res) => {
     try {
         // Extract message details from the request
         const { message } = req.body;
         const { id: receiverId } = req.params;
         const senderId = req.user._id;
+
+        console.log('req.body ' ,req.body);
+
+        const files = req.files ? req.files.map((file) => file.location) : [];
+        console.log('files', files);
 
         // Find or create a conversation between sender and receiver
         let conversation = await Conversation.findOne({
@@ -25,7 +29,8 @@ export const sendMessage = async (req, res) => {
         const newMessage = new Message({
             senderId,
             receiverId,
-            message
+            message, 
+            files
         });
 
         // Add the new message to the conversation
