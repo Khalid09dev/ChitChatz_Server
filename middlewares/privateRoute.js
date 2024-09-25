@@ -4,8 +4,9 @@ import User from '../models/user.model.js';
 const privateRoute = async (req, res, next) => {
     try {
         // Extract token from cookies
-        const token = req.cookies.jwt || req.body.jwt || req.params.jwt;
+        const token = req.cookies.jwt || req.body.jwt || req.params.jwt || req.headers['authorization'].split(' ')[1];
         console.log('req:', req);
+        console.log('req body:', req.body);
         console.log('req Params:', req.params.jwt);
         if(!token) {
             console.log('im here in private route middleware', token, req);
@@ -14,7 +15,7 @@ const privateRoute = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ error: 'No token, authorization denied' });
         }
-        
+
         // Verify the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log('token verified', decoded);
