@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 6
+    }, 
+    profile: {
+        type: String,
+        required: true
     }
     //createdAt and updatedAt
 }, {timestamps: true});
