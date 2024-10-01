@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+// import bodyParser from 'body-parser';
 
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
@@ -17,6 +18,7 @@ const clientUrl = process.env.CLIENT_URL;
 
 // middlewares
 app.use(cookieParser());
+// app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors({
     origin: clientUrl, // Replace with your frontend origin
