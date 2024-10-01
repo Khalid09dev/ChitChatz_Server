@@ -1,6 +1,7 @@
 import User from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import CryptoJS from 'crypto-js';
 
 export const signup = async (req, res) => {
 	try {
@@ -16,10 +17,17 @@ export const signup = async (req, res) => {
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
 
+        const generateGravatarUrl = (email) => {
+            const hash = CryptoJS.MD5(email.trim().toLowerCase());
+            return `https://www.gravatar.com/avatar/${hash}?d=retro`;
+        }
+        const userProfile = generateGravatarUrl(email);
+
 		const newUser = new User({
 			name,
 			email,
 			password: hashedPassword,
+            profile: userProfile,
 		});
 
 		if (newUser) {
