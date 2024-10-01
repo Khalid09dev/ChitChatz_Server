@@ -10,11 +10,11 @@ const upload = multer({
     storage: multers3({
         s3: s3,
         bucket: process.env.AWS_S3_BUCKET,
-        metadata: (req, file, cb) => {
-            cb(null, {fieldName: file.fieldname});
+        metadata: (req, files, cb) => {
+            cb(null, {fieldName: files.fieldname});
         },
-        key: (req, file, cb) => {
-            cb(null, Date.now().toString() + '-' + file.originalname)
+        key: (req, files, cb) => {
+            cb(null, Date.now().toString() + '-' + files.originalname)
         }
     })
 })
@@ -22,6 +22,6 @@ const upload = multer({
 const router = express.Router();
 
 router.get('/:id/:jwt', privateRoute, getMessages);
-router.post('/send/:id', privateRoute, upload.array('files'), sendMessage);
+router.post('/send/:id', privateRoute, upload.array('selectedFiles'), sendMessage);
 
 export default router;
