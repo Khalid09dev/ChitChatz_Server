@@ -18,6 +18,11 @@ const messageSchema = new mongoose.Schema({
         required: false
     }, 
 
+    profile: {
+        type: [String],
+        required: false
+    },
+    
     files: {
         type: [String],
         required: false
