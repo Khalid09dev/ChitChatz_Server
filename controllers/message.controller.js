@@ -10,9 +10,13 @@ export const sendMessage = async (req, res) => {
         const senderId = req.user._id;
 
         console.log('req.body ' ,req.body);
+        console.log('req.body user' ,req.user.name);
 
-        const files = req.files ? req.files.map((file) => file.location) : [];
-        console.log('files', files);
+        // const files = req.files ? req.files.map((file) => file.location) : [];
+        const selectedFiles = req.files ? req.files.map((file) => file.location) : [];
+        console.log('files', selectedFiles);
+        console.log('files', req.selectedFiles);
+
 
         // Find or create a conversation between sender and receiver
         let conversation = await Conversation.findOne({
@@ -29,8 +33,9 @@ export const sendMessage = async (req, res) => {
         const newMessage = new Message({
             senderId,
             receiverId,
-            message, 
-            files
+            message,
+            profile: req.user.profile, 
+            files: selectedFiles
         });
 
         // Add the new message to the conversation
